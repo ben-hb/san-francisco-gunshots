@@ -103,7 +103,11 @@ server <- function(input, output) {
       geom_sf(data = sf_shots_re()) +
       theme_bw() + 
       transition_time(hour) + 
-      ggtitle()
+      labs(
+        title = "Gunshot Deaths in San Francisco",
+        subtitle = "Time = {frame_time}/24 in {input$year()}",
+        caption = "Data from ShotSpotter"
+      )
     
     anim_save("outfile.gif", animate(plot))
     
