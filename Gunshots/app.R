@@ -4,6 +4,11 @@ library(janitor)
 library(lubridate)
 library(gganimate)
 library(ggthemes)
+library(shinythemes)
+library(gifski)
+library(png)
+library(transformr)
+library(shinycssloaders)
 library(tidyverse)
 
 # All of the code before the fluidPage() call is static -- it involves no
@@ -59,10 +64,15 @@ ggplot(data = sf_shape) +
   geom_sf() +
   geom_sf(data = sf_shots)
   
-ui <- fluidPage(
+ui <- fluidPage(theme = shinytheme("superhero"),
    
    titlePanel("Gunshots in San Francisco"),
    
+# The tech-fueled gentrification of SF, combined with efforts by the city to
+# contain and decrease crime in the city, has resulted in noticeable changes in
+# geospatial crime data over the last 10 years. Giving users control over the
+# year is a good way to allow users to interactively visualize that change
+
    sidebarLayout(
       sidebarPanel(
          radioButtons("year",
@@ -72,8 +82,8 @@ ui <- fluidPage(
       ),
       
       mainPanel(
-         imageOutput("shotPlot"),
-         textOutput("description")
+         textOutput("description"),
+         withSpinner(imageOutput("shotPlot"))
       )
    )
 )
@@ -87,20 +97,32 @@ server <- function(input, output) {
     
     })
   
-  output$description <- renderText("This plot was made using data from the ShotSpotter project by the Justice Tech Lab. Big thanks to Justice Tech Lab for putting the dataset together and making it freely accessible to the public! \n The code for this Shiny App can be accessed [here](https://github.com/ben-hb/san-francisco-gunshots)")
+  output$description <- renderText("This plot was made using data from the ShotSpotter project by the Justice Tech Lab. Big thanks to Justice Tech Lab for putting the dataset together and making it freely accessible to the public! \n The code for this Shiny App can be accessed at https://github.com/ben-hb/san-francisco-gunshots")
   
   output$shotPlot <- renderImage({
     
+# Creating a temporary file prior to the plot is necessary in order export the
+# plot as a gif
+    
     outfile <- tempfile(fileext='.gif')
     
-    plot = ggplot() +
+    plot <- ggplot() +
       geom_sf(data = sf_shape) +
-      geom_sf(data = sf_shots_re()) +
+      
+# I use red as the color for dots because I need the dots to stand out against
+# the black and white crowded background and because the red is a visual
+# allusion to the bloody nature of gunshots
+      
+      geom_sf(data = sf_shots_re(), color = "red", alpha = 0.5) +
+      
+# The black and white theme, as recommended by Healy, is a good way to have a
+# simple and quick-loading theme that won't distract from the animation
+      
       theme_bw() + 
       transition_time(hour) + 
       labs(
         title = "Gunshot Deaths in San Francisco",
-        subtitle = "Time = {frame_time}/24 in {input$year()}",
+        subtitle = paste("Time = {frame_time}/24 in ", input$year),
         caption = "Data from ShotSpotter"
       )
     
