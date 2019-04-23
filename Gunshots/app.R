@@ -34,12 +34,7 @@ sf_shots_raw <- read_csv("San_Francisco_ShotSpotter.csv",
   clean_names() %>% 
   mutate(hour = hour(time),
          date = as.Date(date, format = "%d-%b-%y"),
-         year = year(date)) %>% 
-  
-# DELETE BEFORE FINALIZING
-  
-  sample_n(size = 100) %>% 
-  filter(hour < 4)
+         year = year(date)) 
 
 sf_shots = st_as_sf(sf_shots_raw, 
                     coords = c("longitude", "latitude"), 
@@ -103,7 +98,11 @@ server <- function(input, output) {
       geom_sf(data = sf_shots_re()) +
       theme_bw() + 
       transition_time(hour) + 
-      ggtitle()
+      labs(
+        title = "Gunshot Deaths in San Francisco",
+        subtitle = "Time = {frame_time}/24 in {input$year()}",
+        caption = "Data from ShotSpotter"
+      )
     
     anim_save("outfile.gif", animate(plot))
     
