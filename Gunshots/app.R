@@ -33,7 +33,13 @@ sf_shots_raw <- read_csv("San_Francisco_ShotSpotter.csv",
                               )) %>% 
   clean_names() %>% 
   mutate(hour = hour(time),
-         date = as.Date(date, format = "%d-%b-%y"))
+         date = as.Date(date, format = "%d-%b-%y"),
+         year = year(date)) %>% 
+  
+# DELETE BEFORE FINALIZING
+  
+  sample_n(size = 100) %>% 
+  filter(hour < 4)
 
 sf_shots = st_as_sf(sf_shots_raw, 
                     coords = c("longitude", "latitude"), 
@@ -64,15 +70,15 @@ ui <- fluidPage(
    
    sidebarLayout(
       sidebarPanel(
-         sliderInput("hour",
-                     "Hour:",
-                     min = 1,
-                     max = 23,
-                     value = 12)
+         radioButtons("year",
+                      "Year:",
+                      choices = c("2013", "2014", "2015"),
+                      selected = "2014")
       ),
       
       mainPanel(
-         plotOutput("shotPlot")
+         imageOutput("shotPlot"),
+         textOutput("description")
       )
    )
 )
@@ -82,15 +88,30 @@ server <- function(input, output) {
   sf_shots_re <- reactive({
     
     sf_shots %>%
-      filter(hour == input$hour)
+      filter(year == input$year)
     
     })
   
-  output$shotPlot <- renderPlot({
-    ggplot() +
+  output$description <- renderText(md("This plot was made using data from the ShotSpotter project by the Justice Tech Lab. Big thanks to Justice Tech Lab for putting the dataset together and making it freely accessible to the public! \n The code for this Shiny App can be accessed [here](https://github.com/ben-hb/san-francisco-gunshots)"))
+  
+  output$shotPlot <- renderImage({
+    
+    outfile <- tempfile(fileext='.gif')
+    
+    plot = ggplot() +
       geom_sf(data = sf_shape) +
-      geom_sf(data = sf_shots) +
-      theme_map()
+      geom_sf(data = sf_shots_re()) +
+      theme_bw() + 
+      transition_time(hour) + 
+      ggtitle()
+    
+    anim_save("outfile.gif", animate(plot))
+    
+    list(
+      src = "outfile.gif",
+      contentType = 'image/gif'
+    )
+    
   })
   
 }
