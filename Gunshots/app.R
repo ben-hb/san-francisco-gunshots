@@ -87,7 +87,7 @@ server <- function(input, output) {
     
     })
   
-  output$description <- renderText(md("This plot was made using data from the ShotSpotter project by the Justice Tech Lab. Big thanks to Justice Tech Lab for putting the dataset together and making it freely accessible to the public! \n The code for this Shiny App can be accessed [here](https://github.com/ben-hb/san-francisco-gunshots)"))
+  output$description <- renderText("This plot was made using data from the ShotSpotter project by the Justice Tech Lab. Big thanks to Justice Tech Lab for putting the dataset together and making it freely accessible to the public! \n The code for this Shiny App can be accessed [here](https://github.com/ben-hb/san-francisco-gunshots)")
   
   output$shotPlot <- renderImage({
     
